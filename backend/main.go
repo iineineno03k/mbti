@@ -9,11 +9,11 @@ import (
 )
 
 type User struct {
-	Id        int
-	LastName  string
-	FirstName string
-	Nickname  string
-	MBTI      constant.MBTI
+	Id        int           `json:"id"`
+	LastName  string        `json:"lastName"`
+	FirstName string        `json:"firstName"`
+	Nickname  string        `json:"nickname"`
+	MBTI      constant.MBTI `json:"mbti"`
 }
 
 func getAllUsers(c echo.Context) error {
