@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 type User struct {
@@ -41,6 +42,8 @@ func getAllUsers(c echo.Context) error {
 
 func main() {
 	e := echo.New()
+	e.Use(middleware.CORS())
+
 	e.GET("/user", getAllUsers)
 
 	e.Logger.Fatal(e.Start(":8080"))
