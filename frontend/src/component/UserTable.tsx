@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { User, getMbtiType } from './User';
 
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
   maxWidth: 800,
@@ -15,14 +16,14 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   color: theme.palette.text.primary
 }));
 
-const UserTable = () => {
-  const [users, setUsers] = useState([]);
+const UserTable: React.FC = () => {
+  const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await fetch('http://localhost:8080/user');
-        const data = await response.json();
+        const data: User[] = await response.json();
         setUsers(data);
       } catch (error) {
         console.error('Error fetching users:', error);
@@ -33,7 +34,7 @@ const UserTable = () => {
   }, []);
 
   return (
-    <StyledTableContainer component={Paper}>
+    <StyledTableContainer>
       <Table aria-label="simple table">
         <TableHead>
           <TableRow>
@@ -43,11 +44,11 @@ const UserTable = () => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {users.map((user) => (
+          {users.map((user: User) => (
             <TableRow key={user.id}>
-              <StyledTableCell>{user.LastName} {user.FirstName}</StyledTableCell>
-              <StyledTableCell>{user.Nickname}</StyledTableCell>
-              <StyledTableCell>{user.MBTI}</StyledTableCell>
+              <StyledTableCell>{user.lastName} {user.firstName}</StyledTableCell>
+              <StyledTableCell>{user.nickname}</StyledTableCell>
+              <StyledTableCell>{getMbtiType(user.mbti)}</StyledTableCell>
             </TableRow>
           ))}
         </TableBody>
