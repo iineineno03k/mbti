@@ -69,7 +69,11 @@ func postUser(c echo.Context) error {
 
 func main() {
 	e := echo.New()
-	e.Use(middleware.CORS())
+	// CORS middleware
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:3000"},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	}))
 
 	// db接続
 	godotenv.Load(".env")
