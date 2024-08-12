@@ -22,24 +22,25 @@ type User struct {
 }
 
 func getAllUsers(c echo.Context) error {
-	user1 := User{
-		Id:        1,
-		LastName:  "田中",
-		FirstName: "太郎",
-		Nickname:  "たなっち",
-		MBTI:      constant.INTJ_A,
-	}
-	user2 := User{
-		Id:        2,
-		LastName:  "山田",
-		FirstName: "花子",
-		Nickname:  "はなちゃん",
-		MBTI:      constant.ENFJ_T,
+	db, ok := c.Get("db").(*sql.DB)
+	if !ok || db == nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Database connection is not available")
 	}
 
-	var users = []User{
-		user1,
-		user2,
+	rows, err := db.Query("SELECT id, last_name, first_name, nickname, mbti FROM mbti_user")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "取得に失敗しました。")
+	}
+	defer rows.Close()
+
+	var users []User
+	for rows.Next() {
+		var user User
+		err = rows.Scan(&user.Id, &user.LastName, &user.FirstName, &user.Nickname, &user.MBTI)
+		if err != nil {
+			log.Fatal(err)
+		}
+		users = append(users, user)
 	}
 
 	return c.JSON(http.StatusOK, users)
@@ -61,7 +62,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not connect to the database: %v", err)
 	}
-	db.Close()
+	defer db.Close()
+
+	// ミドルウェアを使用してリクエストごとにデータベース接続を注入
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Set("db", db)
+			return next(c)
+		}
+	})
 
 	// ルート設定
 	e.GET("/user", getAllUsers)
