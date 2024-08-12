@@ -15,10 +15,10 @@ import (
 
 type User struct {
 	Id        int           `json:"id"`
-	LastName  string        `json:"lastName"`
-	FirstName string        `json:"firstName"`
-	Nickname  string        `json:"nickname"`
-	MBTI      constant.MBTI `json:"mbti"`
+	LastName  string        `json:"lastName" form:"lastName" validate:"required"`
+	FirstName string        `json:"firstName" form:"firstName" validate:"required"`
+	Nickname  string        `json:"nickname" form:"nickname"`
+	MBTI      constant.MBTI `json:"mbti" form:"mbti" validate:"required"`
 }
 
 func getAllUsers(c echo.Context) error {
@@ -44,6 +44,27 @@ func getAllUsers(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, users)
+}
+
+func postUser(c echo.Context) error {
+	db, ok := c.Get("db").(*sql.DB)
+	if !ok || db == nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Database connection is not available")
+	}
+
+	u := new(User)
+	if err := c.Bind(u); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	// データベースにユーザーを挿入
+	query := `INSERT INTO mbti_user (last_name, first_name, nickname, mbti) VALUES ($1, $2, $3, $4)`
+	_, err := db.Exec(query, u.LastName, u.FirstName, u.Nickname, u.MBTI)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusCreated, u)
 }
 
 func main() {
@@ -74,6 +95,7 @@ func main() {
 
 	// ルート設定
 	e.GET("/user", getAllUsers)
+	e.POST("/user", postUser)
 
 	e.Logger.Fatal(e.Start(":8080"))
 
