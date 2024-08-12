@@ -61,20 +61,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not connect to the database: %v", err)
 	}
-
-	// テーブル作成
-	query := `
-    CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        last_name TEXT NOT NULL,
-        first_name TEXT NOT NULL,
-        nickname TEXT,
-        mbti INTEGER NOT NULL
-    );`
-	_, err = db.Exec(query)
-	if err != nil {
-		log.Fatal(err)
-	}
+	db.Close()
 
 	// ルート設定
 	e.GET("/user", getAllUsers)
