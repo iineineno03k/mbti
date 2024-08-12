@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
+	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
@@ -48,10 +50,16 @@ func main() {
 	e.Use(middleware.CORS())
 
 	// db接続
-	connStr := "user=username dbname=mydatabase password=mypassword sslmode=disable"
+	godotenv.Load(".env")
+	connStr := "host=" + os.Getenv("DB_HOST") +
+		" user=" + os.Getenv("DB_USERNAME") +
+		" password=" + os.Getenv("DB_PASSWORD") +
+		" dbname=" + os.Getenv("DB_NAME") +
+		" port=" + os.Getenv("DB_PORT") +
+		" sslmode=" + os.Getenv("DB_SSLMODE")
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		log.Fatalf("Could not connect to the database: %v", err) // 正しいフォーマットでのエラーメッセージ
+		log.Fatalf("Could not connect to the database: %v", err)
 	}
 
 	// テーブル作成
