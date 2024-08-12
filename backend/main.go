@@ -2,10 +2,13 @@ package main
 
 import (
 	"backend/constant"
+	"database/sql"
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	_ "github.com/lib/pq"
 )
 
 type User struct {
@@ -44,6 +47,28 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.CORS())
 
+	// db接続
+	connStr := "user=username dbname=mydatabase password=mypassword sslmode=disable"
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatalf("Could not connect to the database: %v", err) // 正しいフォーマットでのエラーメッセージ
+	}
+
+	// テーブル作成
+	query := `
+    CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        last_name TEXT NOT NULL,
+        first_name TEXT NOT NULL,
+        nickname TEXT,
+        mbti INTEGER NOT NULL
+    );`
+	_, err = db.Exec(query)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// ルート設定
 	e.GET("/user", getAllUsers)
 
 	e.Logger.Fatal(e.Start(":8080"))
