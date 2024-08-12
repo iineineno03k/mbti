@@ -1,13 +1,13 @@
 // TypeScriptでの型定義
 export interface User {
-    id: number;
+    id?: number;
     lastName: string;
     firstName: string;
-    nickname: string;
+    nickname?: string;
     mbti: number;
 }
 
-const mbtiTypes = [
+export const mbtiTypes = [
     "建築家(INTJ-A)", "建築家(INTJ-T)", "論理学者(INTP-A)", "論理学者(INTP-T)", 
     "指揮官(ENTJ-A)", "指揮官(ENTJ-T)", "討論者(ENTP-A)", "討論者(ENTP-T)",
     "提唱者(INFJ-A)", "提唱者(INFJ-T)", "仲介者(INFP-A)", "仲介者(INFP-T)", 
