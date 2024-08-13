@@ -6,11 +6,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
 )
 
 type User struct {
@@ -67,6 +68,74 @@ func postUser(c echo.Context) error {
 	return c.JSON(http.StatusCreated, u)
 }
 
+func getUserCompatibility(c echo.Context) error {
+	db, ok := c.Get("db").(*sql.DB)
+	if !ok || db == nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Database connection is not available")
+	}
+
+	userId := c.Param("userId")
+	mbtiParam := c.QueryParam("mbti")
+	mbti, err := strconv.Atoi(mbtiParam)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid MBTI parameter")
+	}
+
+	query := `SELECT id, last_name, first_name, nickname, mbti FROM mbti_user WHERE id = $1`
+	var user User
+	db.QueryRow(query, userId).Scan(&user.Id, &user.LastName, &user.FirstName, &user.Nickname, &user.MBTI)
+
+	goodCompatibility, badCompatibility := constant.GetCompatibility(constant.MBTI(mbti))
+	goodUserList, err := fetchUsersByMBTI(db, goodCompatibility)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to fetch compatible users")
+	}
+	badUserList, err := fetchUsersByMBTI(db, badCompatibility)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to fetch incompatible users")
+	}
+
+	response := struct {
+		User         User   `json:"user"`
+		GoodUserList []User `json:"goodUserList"`
+		BadUserList  []User `json:"badUserList"`
+	}{
+		User:         user,
+		GoodUserList: goodUserList,
+		BadUserList:  badUserList,
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func fetchUsersByMBTI(db *sql.DB, mbtis []constant.MBTI) ([]User, error) {
+	// MBTIのスライスを整数のスライスに変換
+	mbtiIdList := make([]int, len(mbtis))
+	for i, mbti := range mbtis {
+		mbtiIdList[i] = int(mbti)
+	}
+	// SQLクエリ実行
+	query := `SELECT id, last_name, first_name, nickname, mbti FROM mbti_user WHERE mbti = ANY($1)`
+	rows, err := db.Query(query, pq.Array(mbtiIdList))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []User
+	for rows.Next() {
+		var user User
+		if err := rows.Scan(&user.Id, &user.LastName, &user.FirstName, &user.Nickname, &user.MBTI); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 func main() {
 	e := echo.New()
 	// CORS middleware
@@ -100,6 +169,7 @@ func main() {
 	// ルート設定
 	e.GET("/user", getAllUsers)
 	e.POST("/user", postUser)
+	e.GET("/user/:userId", getUserCompatibility)
 
 	e.Logger.Fatal(e.Start(":8080"))
 
