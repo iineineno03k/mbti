@@ -37,7 +37,7 @@ const (
 	ESFP_T
 )
 
-func getCompatibility(mbti MBTI) (goodCompatibility, badCompatibility []MBTI) {
+func GetCompatibility(mbti MBTI) (goodCompatibility, badCompatibility []MBTI) {
 
 	switch mbti {
 	case INTJ_A, INTJ_T:
