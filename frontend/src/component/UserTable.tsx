@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import React from 'react';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { User, getMbtiType } from './User';
 
@@ -16,23 +16,11 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   color: theme.palette.text.primary
 }));
 
-const UserTable: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
+interface UserTableProps {
+  users: User[];
+}
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch('http://localhost:8080/user');
-        const data: User[] = await response.json();
-        setUsers(data);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      }
-    };
-
-    fetchUsers();
-  }, []);
-
+const UserTable: React.FC<{ users: User[]; onCompatibilityCheck: (user: User) => void }> = ({ users, onCompatibilityCheck }) => {
   return (
     <StyledTableContainer>
       <Table aria-label="simple table">
@@ -41,6 +29,7 @@ const UserTable: React.FC = () => {
             <StyledTableCell>名前</StyledTableCell>
             <StyledTableCell>あだ名</StyledTableCell>
             <StyledTableCell>MBTI</StyledTableCell>
+            <StyledTableCell></StyledTableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -49,6 +38,9 @@ const UserTable: React.FC = () => {
               <StyledTableCell>{user.lastName} {user.firstName}</StyledTableCell>
               <StyledTableCell>{user.nickname}</StyledTableCell>
               <StyledTableCell>{getMbtiType(user.mbti)}</StyledTableCell>
+              <StyledTableCell>
+                <Button onClick={() => onCompatibilityCheck(user)}>相性を見る</Button>
+              </StyledTableCell>
             </TableRow>
           ))}
         </TableBody>

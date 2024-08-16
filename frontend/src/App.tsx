@@ -1,13 +1,11 @@
 import React from 'react';
 import './App.css';
-import UserTable from './component/UserTable';
-import UserFormModal from './component/UserFormModal';
+import HomePage from './page/HomePage';
 
 function App() {
   return (
     <div>
-      <UserFormModal />
-      <UserTable />
+      <HomePage />
     </div>
   );
 }
